@@ -1,0 +1,65 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: airflow
+  name: worker
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: worker
+    spec:
+      restartPolicy: Always      
+      containers:
+      - name: worker
+        image: samb1392/airflowdna:01
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "1"
+            memory: "2Gi"
+        env:
+        - name: AIRFLOW_HOME
+          value: "/usr/local/airflow"
+        - name: LOAD_EX
+          value: "n"
+        - name: FERNET_KEY
+          value: "46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho="
+        - name: AIRFLOW__CORE__EXECUTOR
+          value: "CeleryExecutor"
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              name: sql-alchemy-conn
+              key: sqlconstring
+        - name: AIRFLOW__CELERY__RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: airflow-celery-backend
+              key: celerybackend
+        - name: AIRFLOW__CELERY__BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: airflow-broker-url
+              key: brokerurl
+        - name: ENV_ID
+          value: "DEV"
+        - name: KEY
+          valueFrom:
+            secretKeyRef:
+              name: key
+              key: keyvalue
+        - name: PYTHONPATH
+          value: ':/usr/local/airflow/customlibrary/scripts/python:/usr/local/airflow/plugins:/usr/local/airflow/plugins/dplibs/utilities'
+        args: ["worker"]
+        volumeMounts:      
+         - mountPath: "/usr/local/airflow"
+           name: azurefilelibs        
+      volumes:     
+        - name: azurefilelibs
+          persistentVolumeClaim:
+           claimName: azurefilelibs      
+     
+

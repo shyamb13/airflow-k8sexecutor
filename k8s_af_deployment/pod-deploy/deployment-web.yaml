@@ -1,0 +1,71 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: airflowkex
+  name: web
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: web
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: web
+        image: samb1392/airflowdnakex:01
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "2"
+            memory: "1Gi"
+        env:
+        - name: AIRFLOW_HOME
+          value: "/usr/local/airflow"
+        - name: LOAD_EX
+          value: "n"
+        - name: FERNET_KEY
+          value: "46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho="
+        - name: EXECUTOR
+          value: "Kubernetes"
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              name: sql-alchemy-conn
+              key: sqlconstring
+        - name: PYTHONPATH
+          value: '/usr/local/airflow/lib/customlibrary/scripts/python:/usr/local/airflow/lib/customlibrary/plugins:/usr/local/airflow/lib/customlibrary/plugins/dplibs/utilities'
+        ports:
+        - name: web
+          containerPort: 8080
+        args: ["webserver"]
+#        livenessProbe:
+#          httpGet:
+#            path: /admin
+#            port: 8080
+#            scheme: HTTP
+#          initialDelaySeconds: 120
+#          timeoutSeconds: 3
+#          periodSeconds: 30
+#          successThreshold: 1
+#          failureThreshold: 5
+        volumeMounts:
+         - mountPath: "/usr/local/airflow/dags"
+           name: airflow-dags
+         - mountPath: "/usr/local/airflow/lib"
+           name: airflow-logs
+         - mountPath: /usr/local/airflow/airflow.cfg
+           subPath: airflow.cfg
+           name: airflow-configmap
+      volumes:
+        - name: airflow-logs
+          persistentVolumeClaim:
+           claimName: airflow-logs
+        - name: airflow-dags
+          persistentVolumeClaim:
+           claimName: airflow-dags
+        - name: airflow-configmap
+          configMap:
+           name: airflow-configmap
+

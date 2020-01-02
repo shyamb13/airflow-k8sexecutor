@@ -1,0 +1,59 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: airflowkex
+  name: scheduler
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: scheduler
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: scheduler
+        image: samb1392/airflowdnakex:01
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+        env:
+        - name: AIRFLOW_HOME
+          value: "/usr/local/airflow"
+        - name: LOAD_EX
+          value: "n"
+        - name: FERNET_KEY
+          value: "46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho="
+        - name: EXECUTOR
+          value: "Kubernetes"
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              name: sql-alchemy-conn
+              key: sqlconstring
+        - name: PYTHONPATH
+          value: '/usr/local/airflow/lib/customlibrary/scripts/python:/usr/local/airflow/lib/customlibrary/plugins:/usr/local/airflow/lib/customlibrary/plugins/dplibs/utilities'
+        args: ["scheduler"]
+        volumeMounts:        
+         - mountPath: "/usr/local/airflow/dags"
+           name: airflow-dags
+         - mountPath: "/usr/local/airflow/lib"
+           name: airflow-logs
+         - mountPath: /usr/local/airflow/airflow.cfg
+           subPath: airflow.cfg
+           name: airflow-configmap        
+      volumes:      
+        - name: airflow-logs
+          persistentVolumeClaim:
+           claimName: airflow-logs
+        - name: airflow-dags
+          persistentVolumeClaim:
+           claimName: airflow-dags
+        - name: airflow-configmap
+          configMap:
+           name: airflow-configmap    
+     
+

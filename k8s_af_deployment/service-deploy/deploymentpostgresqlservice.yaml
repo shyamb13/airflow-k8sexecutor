@@ -1,0 +1,8 @@
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: airflowkex
+  name: postgres
+spec:
+  type: ExternalName
+  externalName: postgressql01.postgres.database.azure.com

@@ -1,0 +1,8 @@
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: airflow
+  name: redis
+spec:
+  type: ExternalName
+  externalName: XXXXXXXXXX.redis.cache.windows.net

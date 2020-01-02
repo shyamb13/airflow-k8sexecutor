@@ -1,0 +1,74 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: airflow
+  name: flower
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: airflow
+        tier: flower
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: flower
+        image: samb1392/airflowdna:01
+        imagePullPolicy: Always        
+        env:
+        - name: AIRFLOW_HOME
+          value: "/usr/local/airflow"
+        - name: AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL
+          value: "0"
+        - name: LOAD_EX
+          value: "n"
+        - name: FERNET_KEY
+          value: "46BKJoQYlPPOexq0OhDZnIlNepKFf87WFwLbfzqDDho="
+        - name: EXECUTOR
+          value: "Celery"
+        - name: AIRFLOW__CORE__SQL_ALCHEMY_CONN
+          valueFrom:
+            secretKeyRef:
+              name: sql-alchemy-conn
+              key: sqlconstring
+        - name: AIRFLOW__CELERY__RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: airflow-celery-backend
+              key: celerybackend
+        - name: AIRFLOW__CELERY__BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: airflow-broker-url
+              key: brokerurl
+        - name: ENV_ID
+          value: "DEV"
+        - name: KEY
+          valueFrom:
+            secretKeyRef:
+              name: key
+              key: keyvalue
+        - name: PYTHONPATH
+          value: ':/usr/local/airflow/customlibrary/scripts/python:/usr/local/airflow/plugins:/usr/local/airflow/plugins/dplibs/utilities'
+        - name: FLOWER_PORT
+          value: "5555"
+        ports:
+        - name: flower
+          containerPort: 5555
+        args: ["flower"]
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5555
+          initialDelaySeconds: 120
+          periodSeconds: 60
+        volumeMounts:               
+         - mountPath: "/usr/local/airflow"
+           name: azurefilelibs       
+      volumes:               
+        - name: azurefilelibs
+          persistentVolumeClaim:
+           claimName: azurefilelibs      
+      
+      
