@@ -5,7 +5,7 @@
     getpass2
     pprint
     uuid
-	requests==2.21.0
+	requests==2.31.0
     azure-mgmt-datalake-analytics 
     azure-mgmt-resource 
     azure-mgmt-datalake-store 
